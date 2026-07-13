@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Plataforma de Ensino CBMAM - Corpo de Bombeiros Militar do Amazonas</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- TELA DE LOGIN -->
+  <div class="login-screen" id="loginScreen">
+    <div class="login-card">
+      <div class="login-logo">
+        <div class="login-logo-badge">🔥</div>
+        <h1>CBMAM</h1>
+        <span>Plataforma EAD</span>
+      </div>
+      <form class="login-form" id="loginForm" onsubmit="handleLogin(event)">
+        <div class="form-group">
+          <label for="loginEmail">E-mail funcional</label>
+          <input type="email" id="loginEmail" placeholder="militar@cbm.am.gov.br" required value="cadete@cbm.am.gov.br">
+        </div>
+        <div class="form-group">
+          <label for="loginPassword">Senha de acesso</label>
+          <input type="password" id="loginPassword" placeholder="••••••••" required value="123456">
+          <div class="login-error" id="loginError" style="display:none;"></div>
+        </div>
+
+        <div class="form-row">
+          <label class="checkbox-label">
+            <input type="checkbox" id="rememberMe" checked> Lembrar-me
+          </label>
+          <a href="#" class="forgot-link" onclick="openForgotPasswordModal(event)">Esqueci minha senha</a>
+        </div>
+        <button type="submit" class="btn btn-primary btn-full">Entrar</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: RECUPERAÇÃO DE SENHA -->
+  <div class="modal-overlay" id="forgotPasswordModal" style="display:none;" onclick="if(event.target===this) closeModal('forgotPasswordModal')">
+    <div class="modal-content">
+      <button class="modal-close" onclick="closeModal('forgotPasswordModal')" aria-label="Fechar">×</button>
+      <div class="modal-icon">🔑</div>
+      <h2>Recuperação de Senha</h2>
+      <p style="color: var(--text-secondary); margin-bottom: 20px;">Informe seu e-mail funcional para receber um link de redefinição.</p>
+      <form onsubmit="handleForgotPassword(event)">
+        <div class="form-group">
+          <label>E-mail funcional</label>
+          <input type="email" id="recoveryEmail" placeholder="militar@cbm.am.gov.br" required>
+        </div>
+        <button type="submit" class="btn btn-primary btn-full">Enviar Link de Recuperação</button>
+      </form>
+      <div id="forgotPasswordFeedback" style="margin-top: 16px; text-align: center;"></div>
+    </div>
+  </div>
+
+  <!-- MODAL GENÉRICO -->
+  <div class="modal-overlay" id="genericModal" style="display:none;" onclick="if(event.target===this) closeModal('genericModal')">
+    <div class="modal-content">
+      <button class="modal-close" onclick="closeModal('genericModal')" aria-label="Fechar">×</button>
+      <div id="genericModalBody"></div>
+    </div>
+  </div>
+
+  <!-- CONTAINER DO APLICATIVO (SPA) -->
+  <div class="app-container" id="appLayout" style="display: none;">
+    
+    <!-- BARRA LATERAL -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-logo">
+        <div class="logo-badge">🔥</div>
+        <div class="logo-text">
+          <span class="logo-title" id="sidebarLogoTitle">CBMAM</span>
+          <span class="logo-subtitle" id="sidebarLogoSubtitle">Ensino a Distância</span>
+        </div>
+        <button class="sidebar-close" id="sidebarClose" onclick="toggleSidebar()" aria-label="Fechar menu">×</button>
+      </div>
+      
+      <ul class="nav-menu">
+        <div id="navMenuItems"></div>
+      </ul>
+      
+      <div class="sidebar-footer">
+        <div class="user-profile-bar">
+          <div class="user-avatar-small" id="userAvatar">C</div>
+          <div class="user-info-text">
+            <span class="user-name-small" id="userNameLabel">Cadete Aluno</span>
+            <span class="user-role-small" id="userRankLabel">Cadete BM</span>
+            <div class="user-xp-mini">
+              <div class="user-xp-bar"><div class="user-xp-fill" id="userXpFill" style="width: 0%;"></div></div>
+              <span class="user-level-badge" id="userLevelBadge">Nível 1</span>
+            </div>
+          </div>
+        </div>
+        <a class="nav-item" onclick="handleLogout()" style="margin-top: 8px;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/>
+          </svg>
+          <span>Sair</span>
+        </a>
+      </div>
+    </aside>
+    <div class="sidebar-backdrop" id="sidebarBackdrop" onclick="toggleSidebar()"></div>
+
+    <!-- WRAPPER DO CONTEÚDO PRINCIPAL -->
+    <div class="content-wrapper">
+      
+      <!-- HEADER SUPERIOR -->
+      <header class="main-header">
+        <div class="header-left">
+          <button class="hamburger-btn" onclick="toggleSidebar()" aria-label="Abrir menu">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+            </svg>
+          </button>
+          <div class="page-title-section">
+            <h2 id="currentPageTitle">Painel de Ensino</h2>
+            <span class="streak-indicator" id="streakIndicator" title="Dias consecutivos de acesso">
+              <span class="streak-flame">🔥</span>
+              <span id="streakDays">0</span> dias
+            </span>
+          </div>
+        </div>
+        <div class="header-actions">
+          <div class="search-container">
+            <input type="text" class="search-input" id="globalSearch" placeholder="Buscar cursos, aulas, termos..." oninput="handleGlobalSearch(this.value)">
+            <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
+            <div class="search-results" id="searchResults"></div>
+          </div>
+          
+          <button class="btn-icon theme-toggle" onclick="toggleTheme()" aria-label="Alternar tema" id="themeToggleBtn" title="Alternar tema claro/escuro">
+            <span id="themeIcon">🌙</span>
+          </button>
+
+          <button class="btn-icon has-badge notif-btn" onclick="toggleNotifications()" aria-label="Notificações" id="notifBtn">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 0 1-3.46 0"/>
+            </svg>
+            <span class="notif-badge" id="notifBadge">0</span>
+          </button>
+          <div class="notif-dropdown" id="notifDropdown" style="display:none;">
+            <div class="notif-header">
+              <h4>Notificações</h4>
+              <button onclick="markAllRead()" class="link-btn">Marcar todas como lidas</button>
+            </div>
+            <div class="notif-list" id="notifList"></div>
+          </div>
+          
+          <div style="width: 1px; height: 24px; background-color: var(--border);"></div>
+          <span style="font-size: 0.9rem; font-weight: 500;" id="headerUserGreeting">Olá, Cadete</span>
+        </div>
+      </header>
+
+      <!-- CONTEÚDO DINÂMICO (ABAS DA SPA) -->
+      <main class="main-content">
+
+        <!-- 1. TELA: DASHBOARD DO ESTUDANTE -->
+        <div class="tab-content" id="studentDashboardTab">
+          <div class="welcome-banner">
+            <div class="welcome-banner-content">
+              <span class="banner-badge">Nova Diretriz Disponível</span>
+              <h1>Seja bem-vindo à Plataforma de Ensino do CBMAM</h1>
+              <p>Capacitação técnica e operacional que salva vidas e protege o nosso Estado do Amazonas. Mantenha seus estudos operacionais em dia.</p>
+              <div class="banner-actions">
+                <button class="btn btn-primary" onclick="switchTab('classroom')">Continuar Aprendendo</button>
+                <button class="btn btn-secondary" onclick="switchTab('calendar')">📅 Ver Agenda Prática</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="dashboard-sections">
+            <div>
+              <h3 style="font-size: 1.2rem; margin-bottom: 20px;">Meus Cursos em Andamento</h3>
+              <div class="courses-in-progress-grid" id="studentCoursesProgressGrid"></div>
+            </div>
+            
+            <div class="dashboard-side-panel">
+              <div class="side-panel-card">
+                <h3>Avisos Recentes</h3>
+                <div class="announcements-list" id="dashboardAnnouncements"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. TELA: CATÁLOGO DE CURSOS -->
+        <div class="tab-content" id="catalogTab">
+          <div style="margin-bottom: 30px;">
+            <p style="color: var(--text-secondary); margin-top: 4px;">Explore as principais disciplinas e capacitações de treinamento militar.</p>
+          </div>
+          <div class="catalog-filters" id="catalogFilters">
+            <button class="filter-chip active" data-filter="all" onclick="filterCatalog('all', this)">Todas</button>
+            <button class="filter-chip" data-filter="hazmat" onclick="filterCatalog('hazmat', this)">Incêndio</button>
+            <button class="filter-chip" data-filter="defesa" onclick="filterCatalog('defesa', this)">APH / Defesa</button>
+            <button class="filter-chip" data-filter="physical" onclick="filterCatalog('physical', this)">Resgate</button>
+            <button class="filter-chip" data-filter="prev" onclick="filterCatalog('prev', this)">Prevenção</button>
+          </div>
+          <div class="catalog-grid" id="catalogGridContainer"></div>
+        </div>
+
+        <!-- 3. TELA: SALA DE AULA -->
+        <div class="tab-content" id="classroomTab">
+          <div class="classroom-layout">
+            <div class="classroom-main">
+              <div class="classroom-breadcrumbs">
+                <span id="classroomBreadcrumbsText">Cursos > Combate a Incêndio > Módulo 1 > Aula 2</span>
+                <button class="bookmark-btn" id="bookmarkBtn" onclick="toggleBookmark()" title="Marcar como favorito">
+                  <span id="bookmarkIcon">☆</span>
+                </button>
+              </div>
+              
+              <h1 id="classroomLessonTitle" style="font-size: 1.6rem; font-weight: 700; margin-top: -8px;">Princípios do Fogo e Comportamento do Incêndio</h1>
+              
+              <!-- Video Player Simulator (STANDBY) -->
+              <div class="classroom-video-container" style="display: none;">
+                <div class="video-player-sim" id="videoPlayerSim">
+                  <div class="video-player-pattern"></div>
+                  <div class="video-playing-screen" id="videoPlayOverlay">
+                    <button class="video-play-btn" onclick="togglePlayVideo()" aria-label="Iniciar Aula">▶</button>
+                  </div>
+                  <div class="video-controls">
+                    <div class="video-progress-bar" onclick="seekVideo(event)">
+                      <div class="video-progress-fill" id="videoProgressFill"></div>
+                      <div class="video-progress-handle" id="videoProgressHandle"></div>
+                    </div>
+                    <div class="video-controls-row">
+                      <div class="video-controls-left">
+                        <button class="btn-icon" style="color: #fff;" onclick="togglePlayVideo()" aria-label="Reproduzir/Pausar">
+                          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polygon points="5 3 19 12 5 21 5 3"/>
+                          </svg>
+                        </button>
+                        <button class="btn-icon" style="color: #fff;" onclick="restartVideo()" aria-label="Reiniciar" title="Reiniciar">
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>
+                          </svg>
+                        </button>
+                        <button class="btn-icon" style="color: #fff;" onclick="changePlaybackSpeed()" aria-label="Velocidade" title="Velocidade" id="speedBtn">
+                          <span style="font-size: 0.75rem; font-weight: 700;">1x</span>
+                        </button>
+                        <span class="video-time" id="videoTimeText">00:00 / 05:00</span>
+                      </div>
+                      <button class="btn-icon" style="color: #fff;" onclick="toggleCaptions()" title="Legendas" id="captionsBtn">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                          <rect x="2" y="5" width="20" height="14" rx="2"/><line x1="6" y1="11" x2="10" y2="11"/><line x1="14" y1="11" x2="18" y2="11"/>
+                        </svg>
+                      </button>
+                      <button class="btn-icon" style="color: #fff;" onclick="toggleFullscreen()" title="Tela cheia">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                          <path d="M8 3H5a2 2 0 0 0-2 2v3M21 8V5a2 2 0 0 0-2-2h-3M3 16v3a2 2 0 0 0 2 2h3M16 21h3a2 2 0 0 0 2-2v-3"/>
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                  <!-- Legendas -->
+                  <div class="video-captions" id="videoCaptions" style="display:none;"></div>
+                </div>
+              </div>
+
+              <!-- Leitor de PDF tipo Livro (Ativo) -->
+              <div class="pdf-book-reader" id="pdfBookReader">
+                <div class="pdf-book-header">
+                  <span>📖 Livro de Doutrina Militar</span>
+                  <div class="pdf-quick-upload">
+                    <input type="file" id="pdfLessonFileInput" accept=".pdf" style="display:none;" onchange="handleLessonPDFUpload(event)">
+                    <button class="btn btn-secondary btn-sm" onclick="document.getElementById('pdfLessonFileInput').click()">📁 Carregar PDF para esta Aula</button>
+                  </div>
+                </div>
+                <div class="pdf-book-wrapper">
+                  <div class="pdf-book-page-outer">
+                    <canvas id="pdfCanvas"></canvas>
+                  </div>
+                </div>
+                <div class="pdf-book-controls">
+                  <button class="btn btn-secondary btn-sm" id="pdfPrevBtn" onclick="prevPDFPage()">◀ Anterior</button>
+                  <span class="pdf-page-indicator" id="pdfPageText">Página 1 / 1</span>
+                  <button class="btn btn-secondary btn-sm" id="pdfNextBtn" onclick="nextPDFPage()">Próxima ▶</button>
+                </div>
+              </div>
+              
+              <!-- Conteúdo de Apoio -->
+              <div class="classroom-study-content">
+                <h3>Material Didático & Teoria</h3>
+                <div class="study-text-container" id="classroomStudyText"></div>
+                <div class="study-materials-download" id="classroomMaterialsDownloadList"></div>
+              </div>
+
+              <!-- Grade de Módulos -->
+              <div style="margin-top: 16px;">
+                <h3 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 16px;">Estrutura Curricular do Curso</h3>
+                <div class="modules-accordion" id="classroomModulesAccordion"></div>
+              </div>
+
+              <!-- Fórum de comentários -->
+              <div style="margin-top: 24px;">
+                <h3 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 16px;">💬 Discussão da Aula</h3>
+                <div class="forum-container" id="forumContainer"></div>
+              </div>
+            </div>
+
+            <!-- Lateral: Anotações e Quiz -->
+            <div style="display: flex; flex-direction: column; gap: 24px;">
+              <div class="quiz-container" id="quizContainerBox"></div>
+              <div class="side-panel-card">
+                <h3>Anotações da Aula</h3>
+                <div class="notes-container">
+                  <textarea class="notes-textarea" id="classNotesTextArea" placeholder="Digite aqui suas observações sobre a instrução atual militar..."></textarea>
+                  <button class="btn btn-primary btn-sm" onclick="saveClassNotes()">Salvar Anotação</button>
+                </div>
+              </div>
+              <!-- Glossário rápido -->
+              <div class="side-panel-card">
+                <h3>📖 Termos da Aula</h3>
+                <div class="glossary-mini" id="lessonGlossaryMini"></div>
+                <a href="#" class="link-btn" onclick="switchTab('glossary'); return false;">Ver glossário completo →</a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 4. TELA: CERTIFICADOS E PROGRESSO -->
+        <div class="tab-content" id="certificatesTab">
+          <div class="certificates-layout">
+            <div class="certificate-preview-box">
+              <div style="text-align: center; width: 100%;">
+                <h3 style="font-size: 1.2rem; margin-bottom: 8px;">Certificado Militar de Conclusão</h3>
+                <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 24px;">Os certificados são emitidos automaticamente após concluir os módulos de um curso com aproveitamento mínimo de 60% nas avaliações.</p>
+              </div>
+              <div id="certificateContainer"></div>
+              <button class="btn btn-gold" id="btnExportCert" style="display: none;" onclick="exportCertificatePDF()">
+                🖨️ Imprimir / Exportar PDF
+              </button>
+            </div>
+            <div class="student-stats-panel">
+              <div class="progress-radial-card">
+                <div class="radial-progress-widget">
+                  <svg class="radial-svg" viewBox="0 0 100 100">
+                    <circle class="radial-bg" cx="50" cy="50" r="45"></circle>
+                    <circle class="radial-fill" id="statsRadialFill" cx="50" cy="50" r="45"></circle>
+                  </svg>
+                  <div class="radial-text">
+                    <span class="radial-number" id="statsRadialPercentage">0%</span>
+                    <span class="radial-label">Concluído</span>
+                  </div>
+                </div>
+                <div class="stats-numerical-list">
+                  <div class="stat-num-row">
+                    <span class="stat-num-label">Módulos concluídos:</span>
+                    <span class="stat-num-val" id="statsModulesCompletedText">0 / 0</span>
+                  </div>
+                  <div class="stat-num-row">
+                    <span class="stat-num-label">Média em provas:</span>
+                    <span class="stat-num-val" id="statsAverageQuizGradeText">0.0%</span>
+                  </div>
+                  <div class="stat-num-row">
+                    <span class="stat-num-label">Experiência (XP):</span>
+                    <span class="stat-num-val" id="statsXpText">0 XP</span>
+                  </div>
+                  <div class="stat-num-row">
+                    <span class="stat-num-label">Streak atual:</span>
+                    <span class="stat-num-val" id="statsStreakText">0 dias 🔥</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="badges-card">
+                <h3>Medalhas e Conquistas (<span id="badgesUnlockedCount">0</span>/<span id="badgesTotalCount">0</span>)</h3>
+                <div class="badges-grid" id="badgesGrid"></div>
+              </div>
+
+              <div class="badges-card" id="npsCard" style="display:none;">
+                <h3>⭐ Avalie este Curso (NPS)</h3>
+                <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 12px;">Sua opinião ajuda a melhorar a capacitação. De 0 a 10, o quanto você recomendaria?</p>
+                <div class="nps-scale" id="npsScale"></div>
+                <div id="npsThanks" style="display:none; color: var(--success); margin-top: 12px; text-align: center;">✅ Obrigado pela sua avaliação!</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 5. TELA: RANKING -->
+        <div class="tab-content" id="rankingTab">
+          <h2 style="font-size: 1.4rem; margin-bottom: 8px;">🏆 Ranking da Academia</h2>
+          <p style="color: var(--text-secondary); margin-bottom: 24px;">Os cadetes com mais experiência e dedicação. A cada aula concluída você ganha XP.</p>
+          
+          <div class="ranking-podium" id="rankingPodium"></div>
+          
+          <div class="ranking-table-wrapper">
+            <table class="ranking-table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Cadete</th>
+                  <th>Patente</th>
+                  <th>XP</th>
+                  <th>Medalhas</th>
+                </tr>
+              </thead>
+              <tbody id="rankingTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- 6. TELA: GLOSSÁRIO -->
+        <div class="tab-content" id="glossaryTab">
+          <h2 style="font-size: 1.4rem; margin-bottom: 8px;">📖 Glossário Militar</h2>
+          <p style="color: var(--text-secondary); margin-bottom: 20px;">Termos técnicos e operacionais do Corpo de Bombeiros Militar do Amazonas.</p>
+          <input type="text" class="glossary-search-input" id="glossarySearch" placeholder="🔎 Buscar termo..." oninput="renderGlossary(this.value)">
+          <div class="glossary-grid" id="glossaryGrid"></div>
+        </div>
+
+        <!-- 7. TELA: CALENDÁRIO / ATIVIDADES PRÁTICAS -->
+        <div class="tab-content" id="calendarTab">
+          <h2 style="font-size: 1.4rem; margin-bottom: 8px;">📅 Calendário de Atividades Práticas</h2>
+          <p style="color: var(--text-secondary); margin-bottom: 24px;">Inscreva-se nas próximas instruções operacionais. Sua participação vale XP extra!</p>
+          
+          <div class="calendar-filters">
+            <button class="filter-chip active" onclick="filterActivities('all', this)">Todas</button>
+            <button class="filter-chip" onclick="filterActivities('aquatico', this)">Aquático</button>
+            <button class="filter-chip" onclick="filterActivities('altura', this)">Altura</button>
+            <button class="filter-chip" onclick="filterActivities('florestal', this)">Florestal</button>
+            <button class="filter-chip" onclick="filterActivities('medico', this)">APH</button>
+            <button class="filter-chip" onclick="filterActivities('evacuacao', this)">Evacuação</button>
+          </div>
+          
+          <div class="calendar-grid" id="calendarGrid"></div>
+        </div>
+
+        <!-- 8. TELA: HISTÓRICO / TIMELINE -->
+        <div class="tab-content" id="historyTab">
+          <h2 style="font-size: 1.4rem; margin-bottom: 8px;">📈 Meu Histórico de Progresso</h2>
+          <p style="color: var(--text-secondary); margin-bottom: 24px;">Acompanhe sua evolução ao longo do tempo.</p>
+          
+          <div class="timeline-stats" id="timelineStats"></div>
+          
+          <div class="timeline" id="timelineContainer"></div>
+        </div>
+
+        <!-- 9. TELA: FAVORITOS -->
+        <div class="tab-content" id="bookmarksTab">
+          <h2 style="font-size: 1.4rem; margin-bottom: 8px;">🔖 Aulas Favoritas</h2>
+          <p style="color: var(--text-secondary); margin-bottom: 24px;">Suas aulas marcadas para revisão rápida.</p>
+          <div id="bookmarksList"></div>
+        </div>
+
+        <!-- 10. TELA: PAINEL ADMIN -->
+        <div class="tab-content" id="adminTab">
+          <div class="admin-tabs-nav">
+            <button class="admin-nav-tab active" data-section="overview" onclick="switchAdminSection('overview', this)">📊 Visão Geral</button>
+            <button class="admin-nav-tab" data-section="courses" onclick="switchAdminSection('courses', this)">📚 Cursos</button>
+            <button class="admin-nav-tab" data-section="students" onclick="switchAdminSection('students', this)">👥 Alunos</button>
+            <button class="admin-nav-tab" data-section="activities" onclick="switchAdminSection('activities', this)">📅 Atividades</button>
+          </div>
+
+          <div class="admin-section" id="adminOverviewSection">
+            <div class="admin-metrics-row">
+              <div class="metric-widget">
+                <div class="metric-icon-box blue">👥</div>
+                <div class="metric-details">
+                  <h4 id="adminMetricStudents">5.248</h4>
+                  <p>Alunos Ativos</p>
+                </div>
+              </div>
+              <div class="metric-widget">
+                <div class="metric-icon-box green">📈</div>
+                <div class="metric-details">
+                  <h4 id="adminMetricCompletion">78.4%</h4>
+                  <p>Taxa de Conclusão</p>
+                </div>
+              </div>
+              <div class="metric-widget">
+                <div class="metric-icon-box gold">⭐</div>
+                <div class="metric-details">
+                  <h4 id="adminMetricScore">85.7</h4>
+                  <p>Média Geral em Provas</p>
+                </div>
+              </div>
+              <div class="metric-widget">
+                <div class="metric-icon-box red">⏱️</div>
+                <div class="metric-details">
+                  <h4 id="adminMetricHours">1.245h</h4>
+                  <p>Treinamento Total</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="admin-grid-layout">
+              <div class="admin-charts-section">
+                <div class="chart-card">
+                  <h3>Médias de Notas por Capacitação Militar (%)</h3>
+                  <div class="bar-chart-sim" id="adminBarChart"></div>
+                </div>
+
+                <div class="quiz-creator-card">
+                  <h3>🤖 Gerador de Questões Militares via IA (HUD API)</h3>
+                  <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 20px;">
+                    Cole o manual técnico, apostila ou texto doutrinário abaixo para gerar uma avaliação objetiva.
+                  </p>
+                  <form id="quizGeneratorForm" onsubmit="generateAIQuiz(event)">
+                    <div class="form-group" style="margin-bottom: 16px;">
+                      <label for="selectTargetCourse">Vincular a qual Curso/Módulo:</label>
+                      <select id="selectTargetCourse" style="width: 100%;"></select>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 16px;">
+                      <label for="quizSourceText">Manual de Treinamento ou Texto Teórico:</label>
+                      <textarea id="quizSourceText" rows="6" style="width: 100%; font-size: 0.9rem;" placeholder="Cole aqui as diretrizes técnicas do Corpo de Bombeiros..." required></textarea>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 20px;">
+                      <label>Leitura Complementar de PDF (Simulador de Upload):</label>
+                      <div class="file-upload-dropzone" onclick="document.getElementById('pdfFileInput').click()">
+                        <span class="file-upload-text" id="pdfUploadStatusText">
+                          Arraste ou clique para carregar o arquivo <strong>PDF ou Manual Técnico</strong>
+                        </span>
+                        <input type="file" id="pdfFileInput" accept=".pdf,.txt" onchange="handlePDFUploadSim(event)">
+                      </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary" id="btnGenerateAIQuiz">
+                      🤖 Gerar Avaliação de Alta Fidelidade (Min. 60% de Nota)
+                    </button>
+                  </form>
+                </div>
+              </div>
+
+              <div style="display: flex; flex-direction: column; gap: 24px;">
+                <div class="side-panel-card">
+                  <h3>Atividade Recente da Plataforma</h3>
+                  <div class="announcements-list" id="adminRecentActivityList" style="max-height: 380px; overflow-y: auto;"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="admin-section" id="adminCoursesSection" style="display:none;">
+            <div class="admin-toolbar">
+              <h3 style="font-size: 1.2rem;">Gerenciar Cursos</h3>
+              <button class="btn btn-primary" onclick="openCreateCourseModal()">➕ Novo Curso</button>
+            </div>
+            <div class="admin-courses-list" id="adminCoursesList"></div>
+          </div>
+
+          <div class="admin-section" id="adminStudentsSection" style="display:none;">
+            <div class="admin-toolbar">
+              <h3 style="font-size: 1.2rem;">Gerenciar Alunos</h3>
+              <input type="text" class="search-input-inline" id="studentSearchInput" placeholder="🔎 Buscar aluno..." oninput="renderAdminStudents(this.value)">
+            </div>
+            <div class="admin-students-table-wrapper">
+              <table class="admin-students-table">
+                <thead>
+                  <tr>
+                    <th>Aluno</th>
+                    <th>Patente</th>
+                    <th>E-mail</th>
+                    <th>XP</th>
+                    <th>Nível</th>
+                    <th>Status</th>
+                    <th>Ações</th>
+                  </tr>
+                </thead>
+                <tbody id="adminStudentsBody"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="admin-section" id="adminActivitiesSection" style="display:none;">
+            <div class="admin-toolbar">
+              <h3 style="font-size: 1.2rem;">Atividades Práticas Agendadas</h3>
+              <button class="btn btn-primary" onclick="openCreateActivityModal()">➕ Nova Atividade</button>
+            </div>
+            <div class="admin-activities-list" id="adminActivitiesList"></div>
+          </div>
+        </div>
+
+      </main>
+
+    </div>
+
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
